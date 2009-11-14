@@ -1,3 +1,12 @@
+#!/usr/bin/python
+
+# Copyright (c)2009 Sean Langley.  Some rights reserved.
+# portions Copyright © 2006-2009 Eric Florenzano from the following website:
+# http://www.eflorenzano.com/blog/post/writing-markov-chain-irc-bot-twisted-and-python/
+#
+# see the accompanying LICENSE file
+
+
 from twisted.words.protocols import irc
 from twisted.internet import protocol
 from random import *
