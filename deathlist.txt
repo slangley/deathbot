@@ -11,6 +11,7 @@ creeps up behind %s and uses a garrote.
 watches oilsdragon's MC stabs %s repeatedly with a pineapple.  Pina colada's anyone?
 staps %s with a hot poker.
 saws %s in half.
+throws %s and the puppy over a cliff into a fleet of swarming tiger sharks.
 throws %s off a cliff, repeatedly.
 makes %s some concrete shoes and throws him in a river.
 watches MysticDreamer give the plague to %s.
@@ -27,6 +28,7 @@ pushes %s into a woodchipper.  The woodchipper wins.
 cuts %s open with rusty scalpel.
 shoots %s in face.
 beats %s over head with cinderblock... he dies.
+rips out %s's spine. FATALITY DEATHBOT WINS!!!
 sets loose hungry Kittens Of Death on %s.
 hits %s with a spoon 22,000 times. 
 rams %s with a bumper boat.
@@ -128,3 +130,4 @@ pretends %s is Voldemort and Avada Kedavras him.
 feeds %s a poisoned muffin; he chokes on the wrapper.
 pricks %s with the spindle of a spinning wheel, and nobody kisses him awake.
 turns %s into a eucalyptus tree...Panda eats tree.
+uses a landspeeder to wind cables around %s's legs, causing him to fall down and explode
