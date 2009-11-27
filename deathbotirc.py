@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # Copyright (c)2009 Sean Langley.  Some rights reserved.
-# portions Copyright © 2006-2009 Eric Florenzano from the following website:
+# portions Copyright (C) 2006-2009 Eric Florenzano from the following website:
 # http://www.eflorenzano.com/blog/post/writing-markov-chain-irc-bot-twisted-and-python/
 #
 # see the accompanying LICENSE file
@@ -48,7 +48,16 @@ class WordWarBot(irc.IRCClient):
 		print str(datetime.today()) + " | " + "Joined %s." % (channel,)
 		self.channel = channel
 
+	def check_for_daddy(self,user):
+		short_user = user.split("!")[0]
+		if (short_user == "quagmire") or (short_user == "smlangley") or (short_user =="quaggy"):
+			return 1
+		else:
+			return 0
+			
+
 	def privmsg(self, user, channel, msg):
+		father = self.check_for_daddy(user)
 		lowmsg = msg.lower()
 		if msg.find("!startwar")!= -1:
 			self.parse_startwar(msg, user)
@@ -66,6 +75,8 @@ class WordWarBot(irc.IRCClient):
 			if (lowmsg.find('kill') != -1) or (lowmsg.find('die') != -1):
 				index = randrange( len(deatharray) )
 				death = deatharray[index]
+				if (self.check_for_daddy(user) == 1):
+					self.irc_send_say("Yes father.");
 				irc.IRCClient.me(self, channel, string.strip(death % "Errol"))
 
 	def parse_startwar(self, command, user):
@@ -82,12 +93,16 @@ class WordWarBot(irc.IRCClient):
 			return
 		self.create_word_war(short_user, commandlist[1], commandlist[2])
 		print str(datetime.today()) + " | " + "Create word war "+short_user + " length "  + commandlist[1] + " starting in " + commandlist[2]
+		if (self.check_for_daddy(user) == 1):
+			self.irc_send_say("Yes father.");
 		self.irc_send_say("The gauntlet has been thrown... "
 						  + short_user + " called a word war of " 
 						  + commandlist[1] + " min starting in "
 						  + commandlist[2] + " minutes." )
 		
 	def parse_join_wordwar(self, command, user):
+		if (self.check_for_daddy(user) == 1):
+			self.irc_send_say("Yes father.");
 		print command
 		commandlist = command.split(" ")
 		if len(commandlist) <2:
@@ -115,6 +130,8 @@ class WordWarBot(irc.IRCClient):
 		self.ww_queue.remove(wordwar)
 		
 	def get_status(self, user):
+		if (self.check_for_daddy(user) == 1):
+			self.irc_send_say("Yes father.");
 		if len(self.ww_queue) == 0:
 			self.irc_send_msg(user,"There are no active word wars")
 			return
