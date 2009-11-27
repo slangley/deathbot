@@ -76,7 +76,7 @@ class WordWarBot(irc.IRCClient):
 				index = randrange( len(deatharray) )
 				death = deatharray[index]
 				if (self.check_for_daddy(user) == 1):
-					self.irc_send_say("Yes father.");
+					self.irc_send_say("Yes, father.");
 				irc.IRCClient.me(self, channel, string.strip(death % "Errol"))
 
 	def parse_startwar(self, command, user):
