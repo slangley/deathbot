@@ -59,6 +59,8 @@ class WordWarBot(irc.IRCClient):
 	def privmsg(self, user, channel, msg):
 		father = self.check_for_daddy(user)
 		lowmsg = msg.lower()
+		if lowmsg.find("unicorn")!= -1:
+			self.irc_send_say("You should go play http://games.adultswim.com/robot-unicorn-attack-twitchy-online-game.html")
 		if msg.find("!startwar")!= -1:
 			self.parse_startwar(msg, user)
 		elif msg.find("!status")!=-1:
@@ -138,8 +140,7 @@ class WordWarBot(irc.IRCClient):
 			
 		for ww in self.ww_queue:
 			ww.status_word_war(user)
-			
-		  
+
 	def irc_send_me(self, message):
 		irc.IRCClient.me(self, self.channel, message)
 		print str(datetime.today()) + " | " + self.channel + " -- me --> " + message
@@ -227,7 +228,14 @@ class WordWar():
 		self.nicklist.append(username)
 		
 	def send_message(self, message):
+		
+		second_message = "Hey! That means you: "
+		for nick in self.nicklist:
+			shortnick = nick.split("!")
+			second_message = second_message + shortnick[0] + " "
+
 		self.wwqueue.irc_send_say(message)
+		self.wwqueue.irc_send_say(second_message)
 		
 		for nick in self.nicklist:
 			self.wwqueue.irc_send_msg(nick, message)
