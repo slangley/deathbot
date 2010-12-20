@@ -35,6 +35,8 @@ class WordWarBot(irc.IRCClient):
     ww_queue = []
     
     channel = ""
+    victim = "errol"
+    victim_display = "Errol"
     
     def _get_nickname(self):
     	return self.factory.nickname
@@ -59,6 +61,14 @@ class WordWarBot(irc.IRCClient):
     	commandlist = msg.split(" ", 1)
     	self.irc_send_say(commandlist[1])
 
+    def parse_changevictim(self,msg,user):
+        if (self.check_for_daddy(user) == 1):
+            commandlist = msg.split(" ")
+            self.victim = commandlist[1].lower()
+            self.victim_display = commandlist[1]
+            self.irc_send_msg(user,"You have changed the victim to: " + self.victim)
+        
+
     def privmsg(self, user, channel, msg):
     	father = self.check_for_daddy(user)
     	lowmsg = msg.lower()
@@ -79,13 +89,18 @@ class WordWarBot(irc.IRCClient):
     		self.print_usage(user)
     	elif msg.startswith("!reloaddeath"):
     		load_death_array()		
-    	elif lowmsg.find('errol') != -1:
+        elif msg.find("!changevictim")!=-1:
+            self.parse_changevictim(msg,user) 
+        elif msg.find("!victim")!=-1:
+            if (father == 1):
+                self.irc_send_msg(user,"The victim is currently: " + self.victim )
+    	elif lowmsg.find(self.victim) != -1:
     		if (lowmsg.find('kill') != -1) or (lowmsg.find('die') != -1):
     			index = randrange( len(deatharray) )
     			death = deatharray[index]
     			if (self.check_for_daddy(user) == 1):
     				self.irc_send_say("Yes, father.");
-    			irc.IRCClient.me(self, channel, string.strip(death % "Errol"))
+    			irc.IRCClient.me(self, channel, string.strip(death % self.victim_display))
 
     def parse_startwar(self, command, user):
     	print str(datetime.today()) + " | " + command
