@@ -35,8 +35,8 @@ class WordWarBot(irc.IRCClient):
     ww_queue = []
     
     channel = ""
-    victim = "errol"
-    victim_display = "Errol"
+    victim = "drew"
+    victim_display = "Drew"
     
     def _get_nickname(self):
     	return self.factory.nickname
