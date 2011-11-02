@@ -38,6 +38,16 @@ class WordWarBot(irc.IRCClient):
     victim = "drew"
     victim_display = "Drew"
     
+    lastdeathtime = datetime.today() - timedelta(seconds=45)
+    
+    def long_enough_since_death(self):
+	if ((datetime.today() - timedelta(seconds=30)) > self.lastdeathtime):
+	    self.lastdeathtime = datetime.today()
+	    return True
+	else:
+	    return False
+	
+
     def _get_nickname(self):
         return self.factory.nickname
     nickname = property(_get_nickname)
@@ -104,12 +114,13 @@ class WordWarBot(irc.IRCClient):
             if (father == 1):
                 self.irc_send_msg(user,"The victim is currently: " + self.victim )
         elif lowmsg.find(self.victim) != -1:
-                if (lowmsg.find('kill') != -1) or (lowmsg.find('die') != -1):
-                        index = randrange( len(deatharray) )
-                        death = deatharray[index]
-                        if (self.check_for_daddy(user) == 1):
-                                self.irc_send_say("Yes, father.");
-                        irc.IRCClient.me(self, channel, string.strip(death % self.victim_display))
+		if (self.long_enough_since_death() == True):
+		    if (lowmsg.find('kill') != -1) or (lowmsg.find('die') != -1):
+			    index = randrange( len(deatharray) )
+			    death = deatharray[index]
+			    if (self.check_for_daddy(user) == 1):
+				    self.irc_send_say("Yes, father.");
+			    irc.IRCClient.me(self, channel, string.strip(death % self.victim_display))
 
     def parse_startwar(self, command, user):
         print str(datetime.today()) + " | " + command
