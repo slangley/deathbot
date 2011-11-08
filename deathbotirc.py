@@ -148,10 +148,11 @@ class WordWarBot(irc.IRCClient):
                 self.irc_send_say("Yes father.");
         print command
         commandlist = command.split(" ")
+        username = commandlist[1].lower()
         if len(commandlist) <2:
                 return
         for war in self.ww_queue:
-                if (war.name == commandlist[1]):
+                if (war.name.lower() == username):
                         print "Adding " + war.name + "-" +commandlist[1] + " - " + user 
                         war.add_user_to_wordwar(user)
                         self.irc_send_msg(user,"You have been added to WW: "+war.name)
@@ -289,11 +290,9 @@ class WordWar():
 
 
 
-if __name__ == "__main__":
-    
-    
+if __name__ == "__main__":    
     chan = sys.argv[1]
-    #chan = "slangley_test"
+    #chan = "danatest"
     load_death_array()
     reactor.connectTCP('irc.mibbit.com', 6667, WordWarBotFactory('#' + chan, 'deathbot'))
     reactor.run()
