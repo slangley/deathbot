@@ -138,7 +138,7 @@ class WordWarBot(irc.IRCClient):
             self.irc_send_msg(short_user,"Each user can only create one Word War at a time")
             return
                         
-        commandlist = command.split(" ")
+        commandlist = [c for c in command.split(" ") if c != '']
         if (len(commandlist) < 3):
                 self.irc_send_msg(user, "Thrown down usage: !throwdown # ## -> create a war for # minutes starting in ## minutes")
                 return
@@ -155,7 +155,7 @@ class WordWarBot(irc.IRCClient):
             self.irc_send_msg(short_user,"Each user can only create one Word War at a time")
             return
             
-        commandlist = command.split(" ")
+        commandlist = [c for c in command.split(" ") if c != '']
         if (len(commandlist) < 3):
                 self.irc_send_msg(user, "Start war usage: !startwar # ## -> create a war for # minutes starting in ## minutes")
                 return
@@ -181,7 +181,7 @@ class WordWarBot(irc.IRCClient):
         if (self.check_for_daddy(user) == 1):
                 self.irc_send_say("Yes father.");
         print command
-        commandlist = command.split(" ")
+        commandlist = [c for c in command.split(" ") if c != '']
         username = commandlist[1].lower()
         if len(commandlist) <2:
                 return
