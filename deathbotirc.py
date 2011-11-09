@@ -90,6 +90,8 @@ class WordWarBot(irc.IRCClient):
                 self.irc_send_say("You should go play http://games.adultswim.com/robot-unicorn-attack-twitchy-online-game.html")
         if msg.find("!startwar")!= -1:
                 self.parse_startwar(msg, user)
+        elif msg.find("!throwdown") != -1:
+                self.parse_throwdown(msg, user)
         elif msg.find("!echo")!= -1:
             if (father==1):
                 self.parse_echo(msg,user)
@@ -122,52 +124,85 @@ class WordWarBot(irc.IRCClient):
 				    self.irc_send_say("Yes, father.");
 			    irc.IRCClient.me(self, channel, string.strip(death % self.victim_display))
 
+    def check_existing_war(self, user):
+        for war in self.ww_queue:
+                if (war.name == user):
+                        return True
+        return False
+                        
+    def parse_throwdown(self, command, user):
+        print str(datetime.today()) + " | " + command
+        print str(datetime.today()) + " | " + user
+        short_user = user.split("!")[0]
+        if self.check_existing_war(short_user):
+            self.irc_send_msg(short_user,"Each user can only create one Word War at a time")
+            return
+                        
+        commandlist = [c for c in command.split(" ") if c != '']
+        if (len(commandlist) < 3):
+                self.irc_send_msg(user, "Thrown down usage: !throwdown # ## -> create a war for # minutes starting in ## minutes")
+                return
+                
+        war = self.initiate_war(short_user, commandlist)
+        if war != None:
+            self.insert_into_war(war, user)
+            
     def parse_startwar(self, command, user):
         print str(datetime.today()) + " | " + command
         print str(datetime.today()) + " | " + user
         short_user = user.split("!")[0]
-        for war in self.ww_queue:
-                if (war.name == short_user):
-                        self.irc_send_msg(short_user,"Each user can only create one Word War at a time")
-                        return
-        commandlist = command.split(" ")
+        if self.check_existing_war(short_user):
+            self.irc_send_msg(short_user,"Each user can only create one Word War at a time")
+            return
+            
+        commandlist = [c for c in command.split(" ") if c != '']
         if (len(commandlist) < 3):
                 self.irc_send_msg(user, "Start war usage: !startwar # ## -> create a war for # minutes starting in ## minutes")
                 return
-        self.create_word_war(short_user, commandlist[1], commandlist[2])
-        print str(datetime.today()) + " | " + "Create word war "+short_user + " length "  + commandlist[1] + " starting in " + commandlist[2]
+        self.initiate_war(short_user, commandlist)
+                
+    def initiate_war(self, user, commandlist):
+        war = self.create_word_war(user, commandlist[1], commandlist[2])
+        print str(datetime.today()) + " | " + "Create word war "+user + " length "  + commandlist[1] + " starting in " + commandlist[2]
         if (self.check_for_daddy(user) == 1):
                 self.irc_send_say("Yes father.");
         self.irc_send_say("The gauntlet has been thrown... "
-                                          + short_user + " called a word war of " 
+                                          + user + " called a word war of " 
                                           + commandlist[1] + " min starting in "
                                           + commandlist[2] + " minutes." )
         
+        return war
+        
+    def insert_into_war(self, war, user):
+        war.add_user_to_wordwar(user)
+        self.irc_send_msg(user, "You have been added to WW: " + war.name)
+                        
     def parse_join_wordwar(self, command, user):
         if (self.check_for_daddy(user) == 1):
                 self.irc_send_say("Yes father.");
         print command
-        commandlist = command.split(" ")
+        commandlist = [c for c in command.split(" ") if c != '']
+        username = commandlist[1].lower()
         if len(commandlist) <2:
                 return
         for war in self.ww_queue:
-                if (war.name == commandlist[1]):
+                if (war.name.lower() == username):
                         print "Adding " + war.name + "-" +commandlist[1] + " - " + user 
-                        war.add_user_to_wordwar(user)
-                        self.irc_send_msg(user,"You have been added to WW: "+war.name)
-                        return
-        
+                        self.insert_into_war(war, user)
+                        return    
         
     def print_usage(self,user):
         self.irc_send_msg(user, "DeathBot Usage:")
         self.irc_send_msg(user, "!startwar # ## -> create a war for # minutes starting in ## minutes")
         self.irc_send_msg(user, "!status -> list wars that are in progress or not yet started")
         self.irc_send_msg(user, "!joinwar <warname> -> join a word war so you get msg'ed on start")
+        self.irc_send_msg(user, "!throwdown # ## - create a war for # minutes starting in ## minutes; add you automatically to your war.")
         self.irc_send_msg(user, "!time -> what's the server time")
 
     def create_word_war(self, name, length, start):
         new_ww = WordWar(name,length,start, self)
         self.ww_queue.append(new_ww)
+        return new_ww
         
     def done_word_war(self, wordwar):
         self.ww_queue.remove(wordwar)
@@ -289,11 +324,8 @@ class WordWar():
 
 
 
-if __name__ == "__main__":
-    
-    
+if __name__ == "__main__":    
     chan = sys.argv[1]
-    #chan = "slangley_test"
     load_death_array()
     reactor.connectTCP('irc.mibbit.com', 6667, WordWarBotFactory('#' + chan, 'deathbot'))
     reactor.run()
