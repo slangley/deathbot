@@ -28,8 +28,8 @@ class WordWarManager:
                 awar.add_user_to_wordwar(user)
         
 	
-    def create_word_war(self, name, length, start):
-        new_ww = WordWar(name,length,start, self)
+    def create_word_war(self, name, length, start,prompt):
+        new_ww = WordWar(name,length,start, self,prompt)
         self.ww_queue.append(new_ww)
         return new_ww
         
@@ -61,9 +61,10 @@ class WordWarManager:
 
 class WordWar():
     
-    def __init__(self, name, length, start, queue):
+    def __init__(self, name, length, start, queue, prompt):
         self.nicklist=[]
         self.name = name
+        self.prompt = prompt
         self.length = int(length)
         self.start = int(start)
         self.timecalled = datetime.today()
@@ -78,12 +79,15 @@ class WordWar():
         
     def warning_word_war(self, args):
         self.send_message("WW: " +self.name + " starts in 2 minutes for "+str(self.length))
+        self.notify_nics()
 
         
     def start_word_war(self, args):
         # send out message
         self.status = 1
         self.send_message("GOOOOOOOOOOO!!! WW: " +self.name + " for " + str(self.length) + " minutes")
+        self.send_message("Prompt for this WW is: %s" % self.prompt )
+        self.notify_nics()
         self.timestarted = datetime.today()
         self.war_timer = Timer( float(self.length)*60.0, self.finish_word_war, [self])
         self.war_timer.start()
@@ -114,22 +118,23 @@ class WordWar():
         print str(datetime.today()) + " | " + "finish word war"
         print str(datetime.today()) + " | " + "remove from queue"
         self.send_message("WW: " +self.name + " is done - send your results")
+        self.notify_nics()
         
         self.wwqueue.done_word_war(self)
         
     def add_user_to_wordwar(self, username):
         self.nicklist.append(username)
-        
-    def send_message(self, message):
-        
+
+    def notify_nics(self):
         second_message = "Hey! That means you: "
         for nick in self.nicklist:
                 shortnick = nick.split("!")
                 second_message = second_message + shortnick[0] + " "
-
-        self.wwqueue.irc_send_say(message)
         self.wwqueue.irc_send_say(second_message)
+
         
+    def send_message(self, message):        
+        self.wwqueue.irc_send_say(message)
         for nick in self.nicklist:
                 self.wwqueue.irc_send_msg(nick, message)
 

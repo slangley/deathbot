@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+# coding=utf8
 # Copyright (c)2009 Sean Langley.  Some rights reserved.
 # portions Copyright (C) 2006-2009 Eric Florenzano from the following website:
 # http://www.eflorenzano.com/blog/post/writing-markov-chain-irc-bot-twisted-and-python/
@@ -19,6 +19,7 @@ from wordwar import WordWar
 from wordwar import WordWarManager
 
 deatharray = []
+promptarray = []
 def load_death_array():
     
     for item in deatharray:
@@ -30,16 +31,38 @@ def load_death_array():
     for line in f.readlines():
         deatharray.append(line)
         print str(datetime.today()) + " | " + "adding "+line
+
+    f.close()
+
+    for item in promptarray:
+        promptarray.remove(item)
+
+    f = open("promptlist.txt","r")
+    print str(datetime.today()) + " | " + "Reloading Prompt Array"
+    
+    for line in f.readlines():
+        promptarray.append(line)
+        print str(datetime.today()) + " | " + "adding "+line
+    f.close()
     
 
-    
+def getRandomDeath():
+    index = randrange( len(deatharray) )
+    death = deatharray[index]
+    return death
+
+def getRandomPrompt():
+    index = randrange( len(promptarray) )
+    prompt = promptarray[index]
+    return prompt
+
 
 class WordWarBot(irc.IRCClient):
 
     
     channel = ""
-    victim = "drew"
-    victim_display = "Drew"
+    victim = "deathbot"
+    victim_display = "deathbot"
     
     lastdeathtime = datetime.today() - timedelta(seconds=45)
     
@@ -122,14 +145,17 @@ class WordWarBot(irc.IRCClient):
         elif msg.find("!victim")!=-1:
             if (father == 1):
                 self.irc_send_msg(user,"The victim is currently: " + self.victim )
-        elif lowmsg.find(self.victim) != -1:
-		if (self.long_enough_since_death() == True):
-		    if (lowmsg.find('kill') != -1) or (lowmsg.find('die') != -1):
-			    index = randrange( len(deatharray) )
-			    death = deatharray[index]
-			    if (self.check_for_daddy(user) == 1):
-				    self.irc_send_say("Yes, father.");
-			    irc.IRCClient.describe(self, channel, string.strip(death % self.victim_display))
+        elif msg.find("!prompt")!=-1:
+            prompt = getRandomPrompt()
+            if (self.check_for_daddy(user) == 1):
+                self.irc_send_say("Yes, father.");
+            irc.IRCClient.say(self, channel, "Here's one: %s" % prompt)
+        elif (lowmsg.find('kill') != -1) or (lowmsg.find('die') != -1):            
+	    
+		    death = getRandomDeath()
+		    if (self.check_for_daddy(user) == 1):
+			    self.irc_send_say("Yes, father.");
+		    irc.IRCClient.say(self, channel, string.strip(user.split("!")[0] + " " + death % self.victim_display))
 
                         
     def parse_throwdown(self, command, user):
@@ -165,7 +191,7 @@ class WordWarBot(irc.IRCClient):
         self.initiate_war(short_user, commandlist)
 
     def initiate_war(self, user, commandlist):
-        war = self.wwMgr.create_word_war(user, commandlist[1], commandlist[2])
+        war = self.wwMgr.create_word_war(user, commandlist[1], commandlist[2],getRandomPrompt())
         print str(datetime.today()) + " | " + "Create word war "+user + " length "  + commandlist[1] + " starting in " + commandlist[2]
         if (self.check_for_daddy(user) == 1):
                 self.irc_send_say("Yes father.");
