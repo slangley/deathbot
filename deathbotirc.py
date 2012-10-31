@@ -15,8 +15,8 @@ from datetime import *
 from threading import Timer
 import string
 #from wordwar import *
-from wordwar2 import WordWar
-from wordwar2 import WordWarManager
+from wordwar import WordWar
+from wordwar import WordWarManager
 
 deatharray = []
 def load_death_array():

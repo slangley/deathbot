@@ -10,6 +10,9 @@ import string
 
 class WordWarManager:
     ww_queue = []
+    def __init__(self,irc):
+        self.irc = irc
+    
 
     def check_existing_war(self, user):
         for war in self.ww_queue:
@@ -19,10 +22,10 @@ class WordWarManager:
     
         
     def insert_into_war(self, war, user):
-	for war in self.ww_queue:
-            if (war.name.lower() == username):
-		print "Adding " + war.name + "-" +commandlist[1] + " - " + user 
-                war.add_user_to_wordwar(user)
+	for awar in self.ww_queue:
+            if (awar.name.lower() == war):
+		print "Adding " + awar.name + " - " + user 
+                awar.add_user_to_wordwar(user)
         
 	
     def create_word_war(self, name, length, start):
@@ -34,14 +37,26 @@ class WordWarManager:
         self.ww_queue.remove(wordwar)
         
     def get_status(self, user):
-        if (self.check_for_daddy(user) == 1):
-                self.irc_send_say("Yes father.");
+#        if (self.check_for_daddy(user) == 1):
+#                self.irc_send_say("Yes father.");
         if len(self.ww_queue) == 0:
-                self.irc_send_msg(user,"There are no active word wars")
+                self.irc.irc_send_msg(user,"There are no active word wars")
                 return
                 
         for ww in self.ww_queue:
                 ww.status_word_war(user)
+    def irc_send_me(self, message):
+        self.irc.irc_send_me( message)
+
+    
+    def irc_send_say(self, message):
+        self.irc.irc_send_say( message)
+
+
+    def irc_send_msg(self, user, message):
+        self.irc.irc_send_msg( user.split("!")[0], message)
+
+                    
 
 
 class WordWar():
@@ -56,7 +71,6 @@ class WordWar():
         self.war_start_timer = Timer( self.start*60, self.start_word_war, [self] )
         self.war_start_timer.start()
         self.timestarted=""
-        #self.start_word_war(["asdf"])
         if (int(self.start) >2 ):
                 self.war_warning_timer = Timer( (self.start-2)*60, self.warning_word_war, [self] )
                 self.war_warning_timer.start()
