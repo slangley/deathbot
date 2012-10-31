@@ -6,7 +6,6 @@
 #
 # see the accompanying LICENSE file
 
-
 from twisted.words.protocols import irc
 from twisted.internet import protocol
 from random import *
@@ -15,6 +14,9 @@ from twisted.internet import reactor
 from datetime import *
 from threading import Timer
 import string
+#from wordwar import *
+from wordwar2 import WordWar
+from wordwar2 import WordWarManager
 
 deatharray = []
 def load_death_array():
@@ -29,16 +31,21 @@ def load_death_array():
         deatharray.append(line)
         print str(datetime.today()) + " | " + "adding "+line
     
+
     
 
 class WordWarBot(irc.IRCClient):
-    ww_queue = []
+
     
     channel = ""
     victim = "drew"
     victim_display = "Drew"
     
     lastdeathtime = datetime.today() - timedelta(seconds=45)
+    
+    
+    def __init__(self):
+	self.wwMgr = WordWarManager(self)
     
     def long_enough_since_death(self):
 	if ((datetime.today() - timedelta(seconds=30)) > self.lastdeathtime):
@@ -96,7 +103,7 @@ class WordWarBot(irc.IRCClient):
             if (father==1):
                 self.parse_echo(msg,user)
         elif msg.find("!status")!=-1:
-                self.get_status(user)
+                self.wwMgr.get_status(user)
         elif lowmsg.find("!time")!=-1:
                 self.irc_send_msg(channel, "thinks the time is "+ str(datetime.today()))
         elif lowmsg.find("!joinwar")!=-1:
@@ -122,19 +129,14 @@ class WordWarBot(irc.IRCClient):
 			    death = deatharray[index]
 			    if (self.check_for_daddy(user) == 1):
 				    self.irc_send_say("Yes, father.");
-			    irc.IRCClient.me(self, channel, string.strip(death % self.victim_display))
+			    irc.IRCClient.describe(self, channel, string.strip(death % self.victim_display))
 
-    def check_existing_war(self, user):
-        for war in self.ww_queue:
-                if (war.name == user):
-                        return True
-        return False
                         
     def parse_throwdown(self, command, user):
         print str(datetime.today()) + " | " + command
         print str(datetime.today()) + " | " + user
         short_user = user.split("!")[0]
-        if self.check_existing_war(short_user):
+        if self.wwMgr.check_existing_war(short_user):
             self.irc_send_msg(short_user,"Each user can only create one Word War at a time")
             return
                         
@@ -145,13 +147,14 @@ class WordWarBot(irc.IRCClient):
                 
         war = self.initiate_war(short_user, commandlist)
         if war != None:
-            self.insert_into_war(war, user)
+            self.wwMgr.insert_into_war(war, user)
+	    self.irc_send_msg(user, "You have been added to WW: " + war.name)
             
     def parse_startwar(self, command, user):
         print str(datetime.today()) + " | " + command
         print str(datetime.today()) + " | " + user
         short_user = user.split("!")[0]
-        if self.check_existing_war(short_user):
+        if self.wwMgr.check_existing_war(short_user):
             self.irc_send_msg(short_user,"Each user can only create one Word War at a time")
             return
             
@@ -160,9 +163,9 @@ class WordWarBot(irc.IRCClient):
                 self.irc_send_msg(user, "Start war usage: !startwar # ## -> create a war for # minutes starting in ## minutes")
                 return
         self.initiate_war(short_user, commandlist)
-                
+
     def initiate_war(self, user, commandlist):
-        war = self.create_word_war(user, commandlist[1], commandlist[2])
+        war = self.wwMgr.create_word_war(user, commandlist[1], commandlist[2])
         print str(datetime.today()) + " | " + "Create word war "+user + " length "  + commandlist[1] + " starting in " + commandlist[2]
         if (self.check_for_daddy(user) == 1):
                 self.irc_send_say("Yes father.");
@@ -172,10 +175,7 @@ class WordWarBot(irc.IRCClient):
                                           + commandlist[2] + " minutes." )
         
         return war
-        
-    def insert_into_war(self, war, user):
-        war.add_user_to_wordwar(user)
-        self.irc_send_msg(user, "You have been added to WW: " + war.name)
+                    
                         
     def parse_join_wordwar(self, command, user):
         if (self.check_for_daddy(user) == 1):
@@ -185,12 +185,15 @@ class WordWarBot(irc.IRCClient):
         username = commandlist[1].lower()
         if len(commandlist) <2:
                 return
-        for war in self.ww_queue:
-                if (war.name.lower() == username):
-                        print "Adding " + war.name + "-" +commandlist[1] + " - " + user 
-                        self.insert_into_war(war, user)
-                        return    
-        
+	
+    	war = username
+    	    
+    	if (self.wwMgr.insert_into_war(war,user) == True):
+    	    self.irc_send_msg(user, "You have been added to WW: " + war)
+    	else:
+    	    self.irc_send_msg(user, "You have been added to WW: " + war)
+            return    
+            
     def print_usage(self,user):
         self.irc_send_msg(user, "DeathBot Usage:")
         self.irc_send_msg(user, "!startwar # ## -> create a war for # minutes starting in ## minutes")
@@ -199,26 +202,9 @@ class WordWarBot(irc.IRCClient):
         self.irc_send_msg(user, "!throwdown # ## - create a war for # minutes starting in ## minutes; add you automatically to your war.")
         self.irc_send_msg(user, "!time -> what's the server time")
 
-    def create_word_war(self, name, length, start):
-        new_ww = WordWar(name,length,start, self)
-        self.ww_queue.append(new_ww)
-        return new_ww
-        
-    def done_word_war(self, wordwar):
-        self.ww_queue.remove(wordwar)
-        
-    def get_status(self, user):
-        if (self.check_for_daddy(user) == 1):
-                self.irc_send_say("Yes father.");
-        if len(self.ww_queue) == 0:
-                self.irc_send_msg(user,"There are no active word wars")
-                return
-                
-        for ww in self.ww_queue:
-                ww.status_word_war(user)
 
     def irc_send_me(self, message):
-        irc.IRCClient.me(self, self.channel, message)
+        irc.IRCClient.describe(self, self.channel, message)
         print str(datetime.today()) + " | " + self.channel + " -- me --> " + message
     
     def irc_send_say(self, message):
@@ -229,7 +215,7 @@ class WordWarBot(irc.IRCClient):
         irc.IRCClient.msg(self, user.split("!")[0], message)
         print str(datetime.today()) + " | " + self.channel + " -- msg: "+user+" --> " + message
         
-#    irc.IRCClient.me(self, channel, "heard:" + msg);
+#    irc.IRCClient.describe(self, channel, "heard:" + msg);
 
 
 class WordWarBotFactory(protocol.ClientFactory):
@@ -247,81 +233,6 @@ class WordWarBotFactory(protocol.ClientFactory):
         print str(datetime.today()) + " | " + "Could not connect: %s" % (reason,)
         
         
-class WordWar():
-    
-    def __init__(self, name, length, start, queue):
-        self.nicklist=[]
-        self.name = name
-        self.length = int(length)
-        self.start = int(start)
-        self.timecalled = datetime.today()
-        self.wwqueue = queue
-        self.war_start_timer = Timer( self.start*60, self.start_word_war, [self] )
-        self.war_start_timer.start()
-        self.timestarted=""
-        #self.start_word_war(["asdf"])
-        if (int(self.start) >2 ):
-                self.war_warning_timer = Timer( (self.start-2)*60, self.warning_word_war, [self] )
-                self.war_warning_timer.start()
-        self.status = 0         
-        
-    def warning_word_war(self, args):
-        self.send_message("WW: " +self.name + " starts in 2 minutes for "+str(self.length))
-
-        
-    def start_word_war(self, args):
-        # send out message
-        self.status = 1
-        self.send_message("GOOOOOOOOOOO!!! WW: " +self.name + " for " + str(self.length) + " minutes")
-        self.timestarted = datetime.today()
-        self.war_timer = Timer( float(self.length)*60.0, self.finish_word_war, [self])
-        self.war_timer.start()
-        
-        
-    def status_word_war(self, user):
-        self.wwqueue.irc_send_msg(user, "name: "+self.name )
-        self.wwqueue.irc_send_msg(user, "length: "+str(self.length))
-        self.wwqueue.irc_send_msg(user, "start: "+str(self.start) )
-        if (self.status == 0):
-            self.wwqueue.irc_send_msg(user, "status: waiting")
-            self.wwqueue.irc_send_msg(user, "called at:" +str(self.timecalled))
-            interval = timedelta(minutes=self.start) 
-            then = self.timecalled + interval
-            timeleft = then - datetime.today() 
-            self.wwqueue.irc_send_msg(user, "time til start (min): " + str(timeleft))
-
-        else:
-            self.wwqueue.irc_send_msg(user, "status: underway")
-            self.wwqueue.irc_send_msg(user, "started at:" +str(self.timestarted))
-        
-        self.wwqueue.irc_send_msg(user, "number members "+str(len(self.nicklist)))
-        self.wwqueue.irc_send_msg(user, "-----")
-        
-        
-    def finish_word_war(self, args):
-        #remove from queue
-        print str(datetime.today()) + " | " + "finish word war"
-        print str(datetime.today()) + " | " + "remove from queue"
-        self.send_message("WW: " +self.name + " is done - send your results")
-        
-        self.wwqueue.done_word_war(self)
-        
-    def add_user_to_wordwar(self, username):
-        self.nicklist.append(username)
-        
-    def send_message(self, message):
-        
-        second_message = "Hey! That means you: "
-        for nick in self.nicklist:
-                shortnick = nick.split("!")
-                second_message = second_message + shortnick[0] + " "
-
-        self.wwqueue.irc_send_say(message)
-        self.wwqueue.irc_send_say(second_message)
-        
-        for nick in self.nicklist:
-                self.wwqueue.irc_send_msg(nick, message)
-
 
 
 if __name__ == "__main__":    
