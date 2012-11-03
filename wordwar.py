@@ -79,6 +79,7 @@ class WordWar():
         
     def warning_word_war(self, args):
         self.send_message("WW: " +self.name + " starts in 2 minutes for "+str(self.length))
+        self.send_message("Optional Prompt for this WW is: %s" % self.prompt )
         self.notify_nics()
 
         
@@ -86,7 +87,7 @@ class WordWar():
         # send out message
         self.status = 1
         self.send_message("GOOOOOOOOOOO!!! WW: " +self.name + " for " + str(self.length) + " minutes")
-        self.send_message("Prompt for this WW is: %s" % self.prompt )
+        self.send_message("Optional Prompt for this WW is: %s" % self.prompt )
         self.notify_nics()
         self.timestarted = datetime.today()
         self.war_timer = Timer( float(self.length)*60.0, self.finish_word_war, [self])
