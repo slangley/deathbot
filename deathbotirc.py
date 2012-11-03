@@ -21,13 +21,13 @@ from wordwar import WordWarManager
 deatharray = []
 promptarray = []
 def load_death_array():
-    
+
     for item in deatharray:
         deatharray.remove(item)
-    
+
     f = open("deathlist.txt","r")
     print str(datetime.today()) + " | " + "Reloading Death Array"
-    
+
     for line in f.readlines():
         deatharray.append(line)
         print str(datetime.today()) + " | " + "adding "+line
@@ -39,12 +39,12 @@ def load_death_array():
 
     f = open("promptlist.txt","r")
     print str(datetime.today()) + " | " + "Reloading Prompt Array"
-    
+
     for line in f.readlines():
-        promptarray.append(line)
+        promptarray.append(string.strip(line))
         print str(datetime.today()) + " | " + "adding "+line
     f.close()
-    
+
 
 def getRandomDeath():
     index = randrange( len(deatharray) )
@@ -59,24 +59,23 @@ def getRandomPrompt():
 
 class WordWarBot(irc.IRCClient):
 
-    
     channel = ""
     victim = "deathbot"
     victim_display = "deathbot"
-    
+
     lastdeathtime = datetime.today() - timedelta(seconds=45)
-    
-    
+
+
     def __init__(self):
 	self.wwMgr = WordWarManager(self)
-    
+
     def long_enough_since_death(self):
 	if ((datetime.today() - timedelta(seconds=30)) > self.lastdeathtime):
 	    self.lastdeathtime = datetime.today()
 	    return True
 	else:
 	    return False
-	
+
 
     def _get_nickname(self):
         return self.factory.nickname
@@ -111,7 +110,7 @@ class WordWarBot(irc.IRCClient):
             self.victim = commandlist[1].lower()
             self.victim_display = commandlist[1]
             self.irc_send_msg(user,"You have changed the victim to: " + self.victim)
-        
+
 
     def privmsg(self, user, channel, msg):
         father = self.check_for_daddy(user)
@@ -149,15 +148,14 @@ class WordWarBot(irc.IRCClient):
             prompt = getRandomPrompt()
             if (self.check_for_daddy(user) == 1):
                 self.irc_send_say("Yes, father.");
-            irc.IRCClient.say(self, channel, "Here's one: %s" % prompt)
-        elif (lowmsg.find(' kill ') != -1) or (lowmsg.find(' die ') != -1):            
-	    
+            irc.IRCClient.say(self, channel, string.strip("Here's one: %s" % prompt))
+        elif (lowmsg.find(' kill ') != -1) or (lowmsg.find(' die ') != -1):
 		    death = getRandomDeath()
 		    if (self.check_for_daddy(user) == 1):
 			    self.irc_send_say("Yes, father.");
 		    irc.IRCClient.say(self, channel, string.strip(user.split("!")[0] + " " + death % self.victim_display))
 
-                        
+
     def parse_throwdown(self, command, user):
         print str(datetime.today()) + " | " + command
         print str(datetime.today()) + " | " + user
@@ -168,14 +166,14 @@ class WordWarBot(irc.IRCClient):
                         
         commandlist = [c for c in command.split(" ") if c != '']
         if (len(commandlist) < 3):
-                self.irc_send_msg(user, "Thrown down usage: !throwdown # ## -> create a war for # minutes starting in ## minutes")
-                return
-                
+            self.irc_send_msg(user, "Thrown down usage: !throwdown # ## -> create a war for # minutes starting in ## minutes")
+            return
+
         war = self.initiate_war(short_user, commandlist)
         if war != None:
-            self.wwMgr.insert_into_war(war, user)
+            self.wwMgr.insert_into_war(war.name, user)
 	    self.irc_send_msg(user, "You have been added to WW: " + war.name)
-            
+
     def parse_startwar(self, command, user):
         print str(datetime.today()) + " | " + command
         print str(datetime.today()) + " | " + user
@@ -183,12 +181,15 @@ class WordWarBot(irc.IRCClient):
         if self.wwMgr.check_existing_war(short_user):
             self.irc_send_msg(short_user,"Each user can only create one Word War at a time")
             return
-            
+
         commandlist = [c for c in command.split(" ") if c != '']
         if (len(commandlist) < 3):
                 self.irc_send_msg(user, "Start war usage: !startwar # ## -> create a war for # minutes starting in ## minutes")
                 return
-        self.initiate_war(short_user, commandlist)
+        war = self.initiate_war(short_user, commandlist)
+        if war != None:
+            self.wwMgr.insert_into_war(war.name, user)
+        self.irc_send_msg(user, "You have been added to WW: " + war.name)
 
     def initiate_war(self, user, commandlist):
         war = self.wwMgr.create_word_war(user, commandlist[1], commandlist[2],getRandomPrompt())
@@ -199,10 +200,8 @@ class WordWarBot(irc.IRCClient):
                                           + user + " called a word war of " 
                                           + commandlist[1] + " min starting in "
                                           + commandlist[2] + " minutes." )
-        
         return war
-                    
-                        
+
     def parse_join_wordwar(self, command, user):
         if (self.check_for_daddy(user) == 1):
                 self.irc_send_say("Yes father.");
@@ -211,15 +210,14 @@ class WordWarBot(irc.IRCClient):
         username = commandlist[1].lower()
         if len(commandlist) <2:
                 return
-	
+
     	war = username
-    	    
     	if (self.wwMgr.insert_into_war(war,user) == True):
     	    self.irc_send_msg(user, "You have been added to WW: " + war)
     	else:
     	    self.irc_send_msg(user, "You have been added to WW: " + war)
-            return    
-            
+            return
+
     def print_usage(self,user):
         self.irc_send_msg(user, "DeathBot Usage:")
         self.irc_send_msg(user, "!startwar # ## -> create a war for # minutes starting in ## minutes")
@@ -232,7 +230,7 @@ class WordWarBot(irc.IRCClient):
     def irc_send_me(self, message):
         irc.IRCClient.describe(self, self.channel, message)
         print str(datetime.today()) + " | " + self.channel + " -- me --> " + message
-    
+
     def irc_send_say(self, message):
         irc.IRCClient.say(self, self.channel, message)
         print str(datetime.today()) + " | " + self.channel + " -- say --> " + message
@@ -240,7 +238,7 @@ class WordWarBot(irc.IRCClient):
     def irc_send_msg(self, user, message):
         irc.IRCClient.msg(self, user.split("!")[0], message)
         print str(datetime.today()) + " | " + self.channel + " -- msg: "+user+" --> " + message
-        
+
 #    irc.IRCClient.describe(self, channel, "heard:" + msg);
 
 
@@ -257,11 +255,10 @@ class WordWarBotFactory(protocol.ClientFactory):
 
     def clientConnectionFailed(self, connector, reason):
         print str(datetime.today()) + " | " + "Could not connect: %s" % (reason,)
-        
-        
 
 
-if __name__ == "__main__":    
+
+if __name__ == "__main__":
     chan = sys.argv[1]
     load_death_array()
     reactor.connectTCP('irc.mibbit.com', 6667, WordWarBotFactory('#' + chan, 'deathbot'))
