@@ -22,9 +22,9 @@ class WordWarManager:
 
 
     def insert_into_war(self, war, user):
-	for awar in self.ww_queue:
+        for awar in self.ww_queue:
             if (awar.name.lower() == war):
-		print "Adding " + awar.name + " - " + user 
+                print "Adding " + awar.name + " - " + user 
                 awar.add_user_to_wordwar(user)
 
 

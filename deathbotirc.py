@@ -41,7 +41,7 @@ def load_death_array():
     print str(datetime.today()) + " | " + "Reloading Prompt Array"
 
     for line in f.readlines():
-        promptarray.append(line)
+        promptarray.append(string.strip(line))
         print str(datetime.today()) + " | " + "adding "+line
     f.close()
 
@@ -171,7 +171,7 @@ class WordWarBot(irc.IRCClient):
 
         war = self.initiate_war(short_user, commandlist)
         if war != None:
-            self.wwMgr.insert_into_war(war, user)
+            self.wwMgr.insert_into_war(war.name, user)
 	    self.irc_send_msg(user, "You have been added to WW: " + war.name)
 
     def parse_startwar(self, command, user):
@@ -188,7 +188,7 @@ class WordWarBot(irc.IRCClient):
                 return
         war = self.initiate_war(short_user, commandlist)
         if war != None:
-            self.wwMgr.insert_into_war(war, user)
+            self.wwMgr.insert_into_war(war.name, user)
         self.irc_send_msg(user, "You have been added to WW: " + war.name)
 
     def initiate_war(self, user, commandlist):
