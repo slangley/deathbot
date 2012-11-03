@@ -148,7 +148,7 @@ class WordWarBot(irc.IRCClient):
             prompt = getRandomPrompt()
             if (self.check_for_daddy(user) == 1):
                 self.irc_send_say("Yes, father.");
-            irc.IRCClient.say(self, channel, "Here's one: %s" % prompt)
+            irc.IRCClient.say(self, channel, string.strip("Here's one: %s" % prompt))
         elif (lowmsg.find(' kill ') != -1) or (lowmsg.find(' die ') != -1):
 		    death = getRandomDeath()
 		    if (self.check_for_daddy(user) == 1):
