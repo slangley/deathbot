@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # coding=utf8
 # Copyright (c)2009 Sean Langley.  Some rights reserved.
 # portions Copyright (C) 2006-2009 Eric Florenzano from the following website:
